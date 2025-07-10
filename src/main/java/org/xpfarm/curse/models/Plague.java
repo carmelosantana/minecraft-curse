@@ -25,6 +25,7 @@ public class Plague {
     private long startTime;
     private boolean isActive;
     private boolean hasAntidote;
+    private int initialMobCount; // Track initial mobs for health bar progress
     
     private BossBar bossBar;
     private List<Entity> activeMobs;
@@ -56,11 +57,15 @@ public class Plague {
         );
         bossBar.addPlayer(player);
         bossBar.setProgress(1.0);
+        
+        // Add all players within curse radius to see the boss bar
+        updateBossBarVisibility();
     }
     
     public void nextRound() {
         currentRound++;
         updateBossBar();
+        updateBossBarVisibility();
         
         // Check if this is the final wave
         if (currentRound > plugin.getConfigManager().getMaxRounds()) {
@@ -79,6 +84,12 @@ public class Plague {
         
         // Schedule mob spawning
         spawnMobs(mobCount);
+        
+        // Reset health bar to full and update visibility
+        if (bossBar != null) {
+            bossBar.setProgress(1.0);
+            updateBossBarVisibility();
+        }
         
         // Start round timer if enabled
         startRoundTimer();
@@ -126,6 +137,9 @@ public class Plague {
     public void onMobKilled(Entity mob) {
         activeMobs.remove(mob);
         totalKills++;
+        
+        // Update health progress as mobs are killed
+        updateHealthProgress();
         
         // Check if round is complete
         if (activeMobs.isEmpty() && isActive) {
@@ -205,6 +219,39 @@ public class Plague {
         }
     }
     
+    public void updateBossBarVisibility() {
+        if (bossBar == null) return;
+        
+        int curseRadius = plugin.getConfigManager().getCombatRadius();
+        
+        // Remove all players first to refresh the list
+        bossBar.removeAll();
+        
+        // Add all players within curse radius
+        for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+            if (onlinePlayer.getWorld().equals(startLocation.getWorld()) &&
+                onlinePlayer.getLocation().distance(startLocation) <= curseRadius) {
+                bossBar.addPlayer(onlinePlayer);
+            }
+        }
+    }
+    
+    public void updateHealthProgress() {
+        if (bossBar == null || !isActive) return;
+        
+        // Remove any dead mobs from the list first
+        activeMobs.removeIf(mob -> mob == null || mob.isDead());
+        
+        int aliveMobs = activeMobs.size();
+        
+        // Calculate progress (1 = all alive, 0 = all dead)
+        double progress = initialMobCount == 0 ? 0.0 : ((double) aliveMobs / initialMobCount);
+        bossBar.setProgress(Math.max(0.0, Math.min(1.0, progress)));
+        
+        // Update boss bar visibility to ensure all nearby players can see it
+        updateBossBarVisibility();
+    }
+    
     // Getters and setters
     public UUID getPlayerId() { return playerId; }
     public Player getPlayer() { return player; }
@@ -216,6 +263,7 @@ public class Plague {
     public boolean hasAntidote() { return hasAntidote; }
     public List<Entity> getActiveMobs() { return activeMobs; }
     public BossBar getBossBar() { return bossBar; }
+    public int getInitialMobCount() { return initialMobCount; }
     
     public void addMob(Entity mob) {
         activeMobs.add(mob);
@@ -223,5 +271,9 @@ public class Plague {
     
     public void setHasAntidote(boolean hasAntidote) {
         this.hasAntidote = hasAntidote;
+    }
+    
+    public void setInitialMobCount(int count) {
+        this.initialMobCount = count;
     }
 }

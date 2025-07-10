@@ -118,6 +118,9 @@ public class PlagueManager {
         Location center = player.getLocation();
         int spawnRadius = plugin.getConfigManager().getSpawnRadius();
         
+        // Set initial mob count for health bar progress tracking
+        plague.setInitialMobCount(count);
+        
         for (int i = 0; i < count; i++) {
             // Calculate spawn location around player
             double angle = random.nextDouble() * 2 * Math.PI;
@@ -142,6 +145,9 @@ public class PlagueManager {
                 }
             }
         }
+        
+        // Update health progress after all mobs are spawned
+        plague.updateHealthProgress();
     }
     
     private Zombie spawnEnhancedZombie(Location location, int round) {
@@ -379,6 +385,9 @@ public class PlagueManager {
                     cancel();
                     return;
                 }
+                
+                // Update boss bar visibility for all players in radius
+                plague.updateBossBarVisibility();
                 
                 // Check if player left combat radius
                 int combatRadius = plugin.getConfigManager().getCombatRadius();
