@@ -1,0 +1,31 @@
+name: TheCurse
+version: '${project.version}'
+description: A dynamic survival challenge plugin with plague-style siege events
+api-version: '1.21'
+main: org.xpfarm.curse.CursePlugin
+author: Carmelo Santana
+website: https://xp.farm
+
+commands:
+  curse:
+    description: Main curse command
+    usage: /curse <subcommand>
+    permission: curse.use
+    aliases: [plague, thecurse]
+
+permissions:
+  curse.admin:
+    description: Full access to curse commands
+    default: op
+  curse.use:
+    description: Can use basic curse commands and drink bad omen potion
+    default: true
+  curse.start:
+    description: Can force start a curse
+    default: op
+  curse.stop:
+    description: Can force stop a curse
+    default: op
+  curse.reload:
+    description: Can reload plugin configuration
+    default: op

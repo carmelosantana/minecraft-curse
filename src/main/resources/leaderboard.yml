@@ -1,0 +1,13 @@
+# The Curse Leaderboard Data
+# This file stores server-wide leaderboard statistics
+# Player-specific data is stored in their persistent data containers
+
+# Global statistics across all players
+global:
+  totalCompletions: 0
+  totalKills: 0
+  totalDeaths: 0
+
+# Top players data (automatically updated)
+# This section will be populated as players complete curses
+players: {}

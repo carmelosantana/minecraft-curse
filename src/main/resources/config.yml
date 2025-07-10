@@ -1,0 +1,77 @@
+# The Curse Plugin Configuration
+# https://xp.farm
+
+# Plague Configuration
+plague:
+  # Maximum number of rounds before final wave
+  maxRounds: 7
+  
+  # Scale difficulty with player XP level
+  scaleWithXP: true
+  
+  # Spawn radius around player (blocks)
+  spawnRadius: 20
+  
+  # Time limit per round (seconds, 0 = no limit)
+  timeLimitPerRound: 60
+  
+  # Allow mobs to damage terrain
+  allowTerrainDamage: false
+  
+  # Maximum number of active plagues on server
+  maxActivePlagues: 3
+  
+  # Enable visual effects (particles, sounds)
+  visualEffects: true
+  
+  # Combat radius - leaving this area fails the plague
+  combatRadius: 30
+  
+  # Minimum distance from villages/protected areas
+  minDistanceFromVillages: 100
+
+# Rewards Configuration
+rewards:
+  # Loot that can appear in reward chests
+  chestLoot:
+    common:
+      - "minecraft:bread"
+      - "minecraft:cooked_beef"
+      - "minecraft:golden_apple"
+    uncommon:
+      - "minecraft:potion{Potion:\"minecraft:healing\"}"
+      - "minecraft:potion{Potion:\"minecraft:swiftness\"}"
+      - "minecraft:enchanted_book"
+    rare:
+      - "minecraft:totem_of_undying"
+      - "minecraft:netherite_ingot"
+      - "minecraft:diamond"
+    legendary:
+      - "curse:undo_potion"
+      - "minecraft:dragon_egg"
+
+# Leaderboard Configuration
+leaderboard:
+  # Enable leaderboard system
+  enabled: true
+  
+  # Metrics to track
+  trackMetrics:
+    - "totalCompletions"
+    - "bestTime"
+    - "totalKills"
+    - "highestRound"
+  
+  # Number of entries to display
+  displayCount: 10
+
+# Debug Configuration
+debug:
+  # Enable debug messages
+  enabled: false
+  
+  # Log mob spawn events
+  logMobSpawns: false
+  
+  # Log player actions
+  logPlayerActions: false
