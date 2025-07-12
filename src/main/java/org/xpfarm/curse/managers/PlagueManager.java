@@ -6,6 +6,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.boss.BarColor;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -401,14 +402,22 @@ public class PlagueManager {
                 // Update boss bar visibility for all players in radius
                 plague.updateBossBarVisibility();
                 
-                // Check if player left combat radius
+                // Check player position relative to combat radius
                 int combatRadius = plugin.getConfigManager().getCombatRadius();
-                if (player.getLocation().distance(plague.getStartLocation()) > combatRadius) {
-                    MessageUtil.sendMessage(player, Component.text("You left the curse area! The curse intensifies!", NamedTextColor.RED));
-                    applyPoisonPenalty(plague);
-                    plague.endPlague(false);
-                    cancel();
-                    return;
+                int warningDistance = plugin.getConfigManager().getWarningDistance();
+                double distanceFromStart = player.getLocation().distance(plague.getStartLocation());
+                
+                // Check if player is approaching the boundary (warning zone)
+                if (distanceFromStart > (combatRadius - warningDistance) && distanceFromStart <= combatRadius) {
+                    PlagueManager.this.handleWarningZone(plague, player);
+                }
+                
+                // Check if player left combat radius
+                if (distanceFromStart > combatRadius) {
+                    PlagueManager.this.handlePlayerLeftArea(plague, player);
+                } else if (plague.isOutsideArea()) {
+                    // Player returned to combat area
+                    PlagueManager.this.handlePlayerReturnedToArea(plague, player);
                 }
                 
                 // Check if it's daylight and player doesn't have antidote
@@ -441,5 +450,60 @@ public class PlagueManager {
         
         // Send reset message
         MessageUtil.sendMessage(player, Component.text("Your curse has been reset! You must wait before starting another one.", NamedTextColor.YELLOW));
+    }
+    
+    private void handleWarningZone(Plague plague, Player player) {
+        long currentTime = System.currentTimeMillis();
+        int warningCooldown = plugin.getConfigManager().getWarningCooldownSeconds() * 1000;
+        
+        // Check if enough time has passed since last warning
+        if (currentTime - plague.getLastWarningTime() >= warningCooldown) {
+            MessageUtil.sendMessage(player, Component.text("⚠ WARNING: You are approaching the curse boundary!", NamedTextColor.YELLOW));
+            MessageUtil.sendMessage(player, Component.text("Leaving the area will poison you, but the curse will continue!", NamedTextColor.GOLD));
+            plague.setLastWarningTime(currentTime);
+            plague.setHasBeenWarned(true);
+        }
+    }
+    
+    private void handlePlayerLeftArea(Plague plague, Player player) {
+        if (!plague.isOutsideArea()) {
+            // Player just left the area
+            plague.setOutsideArea(true);
+            
+            MessageUtil.sendMessage(player, Component.text("You left the cursed area! The curse poison flows through you!", NamedTextColor.RED));
+            MessageUtil.sendMessage(player, Component.text("Return to the cursed area to cleanse the poison!", NamedTextColor.YELLOW));
+            
+            // Apply poison effect
+            applyPoisonEffect(player);
+            
+            // Update boss bar to show poisoned state
+            plague.getBossBar().setTitle("The Curse - Round " + plague.getCurrentRound() + " (POISONED - Return to Area!)");
+            plague.getBossBar().setColor(BarColor.PURPLE);
+        } else {
+            // Player is still outside, maintain poison effect
+            if (!player.hasPotionEffect(PotionEffectType.POISON)) {
+                applyPoisonEffect(player);
+            }
+        }
+    }
+    
+    private void handlePlayerReturnedToArea(Plague plague, Player player) {
+        // Player returned to the cursed area
+        plague.setOutsideArea(false);
+        plague.setHasBeenWarned(false);
+        
+        MessageUtil.sendMessage(player, Component.text("You returned to the cursed area! The poison subsides.", NamedTextColor.GREEN));
+        
+        // Remove poison effect
+        player.removePotionEffect(PotionEffectType.POISON);
+        
+        // Update boss bar back to normal
+        plague.getBossBar().setTitle("The Curse - Round " + plague.getCurrentRound());
+        plague.getBossBar().setColor(BarColor.RED);
+    }
+    
+    private void applyPoisonEffect(Player player) {
+        // Apply a continuous poison effect
+        player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 1, false, true));
     }
 }
