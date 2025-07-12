@@ -7,6 +7,7 @@ import org.xpfarm.curse.listeners.PotionListener;
 import org.xpfarm.curse.managers.PlagueManager;
 import org.xpfarm.curse.managers.LeaderboardManager;
 import org.xpfarm.curse.managers.ConfigManager;
+import org.xpfarm.curse.managers.CooldownManager;
 import org.xpfarm.curse.utils.MessageUtil;
 
 import net.kyori.adventure.text.Component;
@@ -18,6 +19,7 @@ public class CursePlugin extends JavaPlugin {
     private PlagueManager plagueManager;
     private LeaderboardManager leaderboardManager;
     private ConfigManager configManager;
+    private CooldownManager cooldownManager;
     
     @Override
     public void onEnable() {
@@ -25,6 +27,7 @@ public class CursePlugin extends JavaPlugin {
         
         // Initialize managers
         configManager = new ConfigManager(this);
+        cooldownManager = new CooldownManager(this);
         plagueManager = new PlagueManager(this);
         leaderboardManager = new LeaderboardManager(this);
         
@@ -86,6 +89,10 @@ public class CursePlugin extends JavaPlugin {
     
     public ConfigManager getConfigManager() {
         return configManager;
+    }
+    
+    public CooldownManager getCooldownManager() {
+        return cooldownManager;
     }
     
     public void reloadPlugin() {

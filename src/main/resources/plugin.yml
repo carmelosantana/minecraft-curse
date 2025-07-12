@@ -15,8 +15,14 @@ commands:
 
 permissions:
   curse.admin:
-    description: Full access to curse commands
+    description: Full access to curse commands (includes all permissions)
     default: op
+    children:
+      curse.use: true
+      curse.start: true
+      curse.stop: true
+      curse.reset: true
+      curse.reload: true
   curse.use:
     description: Can use basic curse commands and drink bad omen potion
     default: true
@@ -25,6 +31,9 @@ permissions:
     default: op
   curse.stop:
     description: Can force stop a curse
+    default: op
+  curse.reset:
+    description: Can reset a curse and set cooldown
     default: op
   curse.reload:
     description: Can reload plugin configuration

@@ -37,8 +37,20 @@ public class PlagueManager {
     }
     
     public boolean startPlague(Player player) {
+        return startPlague(player, false);
+    }
+    
+    public boolean startPlague(Player player, boolean bypassCooldown) {
         // Check if player already has active plague
         if (hasActivePlague(player)) {
+            return false;
+        }
+        
+        // Check cooldown unless bypassed (admin command)
+        if (!bypassCooldown && plugin.getCooldownManager().hasCooldown(player)) {
+            long remainingSeconds = plugin.getCooldownManager().getRemainingCooldownSeconds(player);
+            long remainingMinutes = remainingSeconds / 60;
+            MessageUtil.sendMessage(player, Component.text("You must wait " + remainingMinutes + " minutes before starting another curse!", NamedTextColor.RED));
             return false;
         }
         
@@ -410,5 +422,24 @@ public class PlagueManager {
                 }
             }
         }.runTaskTimer(plugin, 20L, 20L); // Check every second
+    }
+    
+    public void resetPlague(Player player) {
+        resetPlague(player, true);
+    }
+    
+    public void resetPlague(Player player, boolean setCooldown) {
+        Plague plague = activePlagues.get(player.getUniqueId());
+        if (plague != null) {
+            plague.endPlague(false);
+        }
+        
+        // Set cooldown if requested
+        if (setCooldown) {
+            plugin.getCooldownManager().setCooldown(player);
+        }
+        
+        // Send reset message
+        MessageUtil.sendMessage(player, Component.text("Your curse has been reset! You must wait before starting another one.", NamedTextColor.YELLOW));
     }
 }

@@ -59,6 +59,10 @@ public class ConfigManager {
         return config.getInt("plague.minDistanceFromVillages", 100);
     }
     
+    public int getResetCooldownMinutes() {
+        return config.getInt("plague.resetCooldownMinutes", 5);
+    }
+    
     // Leaderboard Configuration
     public boolean isLeaderboardEnabled() {
         return config.getBoolean("leaderboard.enabled", true);

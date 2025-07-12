@@ -29,6 +29,9 @@ plague:
   
   # Minimum distance from villages/protected areas
   minDistanceFromVillages: 100
+  
+  # Cooldown after curse reset (minutes)
+  resetCooldownMinutes: 5
 
 # Rewards Configuration
 rewards:
