@@ -36,7 +36,7 @@ public class ConfigManager {
     }
     
     public int getTimeLimitPerRound() {
-        return config.getInt("plague.timeLimitPerRound", 60);
+        return config.getInt("plague.timeLimitPerRound", 180);
     }
     
     public boolean isAllowTerrainDamage() {

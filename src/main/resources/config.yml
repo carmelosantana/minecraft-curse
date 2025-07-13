@@ -13,7 +13,7 @@ plague:
   spawnRadius: 20
   
   # Time limit per round (seconds, 0 = no limit)
-  timeLimitPerRound: 60
+  timeLimitPerRound: 180
   
   # Allow mobs to damage terrain
   allowTerrainDamage: false
