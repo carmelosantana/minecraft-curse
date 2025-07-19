@@ -2,8 +2,9 @@ package org.xpfarm.curse.managers;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.boss.BarColor;
@@ -171,8 +172,11 @@ public class PlagueManager {
         
         // Scale zombie based on round
         double healthMultiplier = 1.0 + (round * 0.5);
-        zombie.setMaxHealth(zombie.getMaxHealth() * healthMultiplier);
-        zombie.setHealth(zombie.getMaxHealth());
+        AttributeInstance maxHealthAttr = zombie.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealthAttr != null) {
+            maxHealthAttr.setBaseValue(maxHealthAttr.getBaseValue() * healthMultiplier);
+            zombie.setHealth(maxHealthAttr.getValue());
+        }
         
         // Add speed based on round
         if (round > 2) {
@@ -184,7 +188,7 @@ public class PlagueManager {
             giveZombieArmor(zombie, round);
         }
         
-        // Prevent despawning
+        // Prevent entity from disappearing naturally
         zombie.setPersistent(true);
         
         // Custom name
@@ -258,15 +262,14 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§aCurse Antidote"); // Use legacy color codes
-        List<String> lore = Arrays.asList(
-            "§7Ends the current curse",
-            "§eUse wisely!"
+        meta.displayName(Component.text("Curse Antidote", NamedTextColor.GREEN));
+        List<Component> lore = Arrays.asList(
+            Component.text("Ends the current curse", NamedTextColor.GRAY),
+            Component.text("Use wisely!", NamedTextColor.YELLOW)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
-        // Create custom potion using NamespacedKey
-        NamespacedKey key = new NamespacedKey(plugin, "curse_antidote");
+        // Create custom potion for healing appearance
         meta.setBasePotionType(PotionType.HEALING); // Base type for appearance
         
         potion.setItemMeta(meta);
@@ -277,12 +280,12 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§9Undo Potion"); // Use legacy color codes
-        List<String> lore = Arrays.asList(
-            "§7Reverses damage from last round",
-            "§6Very rare!"
+        meta.displayName(Component.text("Undo Potion", NamedTextColor.BLUE));
+        List<Component> lore = Arrays.asList(
+            Component.text("Reverses damage from last round", NamedTextColor.GRAY),
+            Component.text("Very rare!", NamedTextColor.GOLD)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
         meta.setBasePotionType(PotionType.HEALING);
         
@@ -294,12 +297,12 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§4Curse Trigger"); // Use legacy color codes for compatibility
-        List<String> lore = Arrays.asList(
-            "§7Drink at night to start The Curse",
-            "§cBeware the undead plague!"
+        meta.displayName(Component.text("Curse Trigger", NamedTextColor.DARK_RED));
+        List<Component> lore = Arrays.asList(
+            Component.text("Drink at night to start The Curse", NamedTextColor.GRAY),
+            Component.text("Beware the undead plague!", NamedTextColor.RED)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
         meta.setBasePotionType(PotionType.AWKWARD); // Base type for appearance
         meta.addCustomEffect(new PotionEffect(PotionEffectType.BAD_OMEN, 1, 0), true);

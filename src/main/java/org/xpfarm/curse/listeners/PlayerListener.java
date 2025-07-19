@@ -3,6 +3,7 @@ package org.xpfarm.curse.listeners;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -91,17 +92,20 @@ public class PlayerListener implements Listener {
         }
     }
     
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         
+        // Early return if no active plague to improve performance
+        if (!plugin.getPlagueManager().hasActivePlague(player)) {
+            return;
+        }
+        
         // Check if player has active plague and moved significantly
-        if (plugin.getPlagueManager().hasActivePlague(player)) {
-            Plague plague = plugin.getPlagueManager().getPlague(player);
-            if (plague != null && plague.isActive()) {
-                // Distance check is handled in PlagueManager monitoring task
-                // This event can be used for other movement-based features if needed
-            }
+        Plague plague = plugin.getPlagueManager().getPlague(player);
+        if (plague != null && plague.isActive()) {
+            // Distance check is handled in PlagueManager monitoring task
+            // This event can be used for other movement-based features if needed
         }
     }
 }
