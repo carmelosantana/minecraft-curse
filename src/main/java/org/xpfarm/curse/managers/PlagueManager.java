@@ -2,10 +2,12 @@ package org.xpfarm.curse.managers;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.boss.BarColor;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -37,8 +39,20 @@ public class PlagueManager {
     }
     
     public boolean startPlague(Player player) {
+        return startPlague(player, false);
+    }
+    
+    public boolean startPlague(Player player, boolean bypassCooldown) {
         // Check if player already has active plague
         if (hasActivePlague(player)) {
+            return false;
+        }
+        
+        // Check cooldown unless bypassed (admin command)
+        if (!bypassCooldown && plugin.getCooldownManager().hasCooldown(player)) {
+            long remainingSeconds = plugin.getCooldownManager().getRemainingCooldownSeconds(player);
+            long remainingMinutes = remainingSeconds / 60;
+            MessageUtil.sendMessage(player, Component.text("You must wait " + remainingMinutes + " minutes before starting another curse!", NamedTextColor.RED));
             return false;
         }
         
@@ -158,8 +172,11 @@ public class PlagueManager {
         
         // Scale zombie based on round
         double healthMultiplier = 1.0 + (round * 0.5);
-        zombie.setMaxHealth(zombie.getMaxHealth() * healthMultiplier);
-        zombie.setHealth(zombie.getMaxHealth());
+        AttributeInstance maxHealthAttr = zombie.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealthAttr != null) {
+            maxHealthAttr.setBaseValue(maxHealthAttr.getBaseValue() * healthMultiplier);
+            zombie.setHealth(maxHealthAttr.getValue());
+        }
         
         // Add speed based on round
         if (round > 2) {
@@ -171,7 +188,7 @@ public class PlagueManager {
             giveZombieArmor(zombie, round);
         }
         
-        // Prevent despawning
+        // Prevent entity from disappearing naturally
         zombie.setPersistent(true);
         
         // Custom name
@@ -245,15 +262,14 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§aCurse Antidote"); // Use legacy color codes
-        List<String> lore = Arrays.asList(
-            "§7Ends the current curse",
-            "§eUse wisely!"
+        meta.displayName(Component.text("Curse Antidote", NamedTextColor.GREEN));
+        List<Component> lore = Arrays.asList(
+            Component.text("Ends the current curse", NamedTextColor.GRAY),
+            Component.text("Use wisely!", NamedTextColor.YELLOW)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
-        // Create custom potion using NamespacedKey
-        NamespacedKey key = new NamespacedKey(plugin, "curse_antidote");
+        // Create custom potion for healing appearance
         meta.setBasePotionType(PotionType.HEALING); // Base type for appearance
         
         potion.setItemMeta(meta);
@@ -264,12 +280,12 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§9Undo Potion"); // Use legacy color codes
-        List<String> lore = Arrays.asList(
-            "§7Reverses damage from last round",
-            "§6Very rare!"
+        meta.displayName(Component.text("Undo Potion", NamedTextColor.BLUE));
+        List<Component> lore = Arrays.asList(
+            Component.text("Reverses damage from last round", NamedTextColor.GRAY),
+            Component.text("Very rare!", NamedTextColor.GOLD)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
         meta.setBasePotionType(PotionType.HEALING);
         
@@ -281,12 +297,12 @@ public class PlagueManager {
         ItemStack potion = new ItemStack(Material.POTION);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();
         
-        meta.setDisplayName("§4Curse Trigger"); // Use legacy color codes for compatibility
-        List<String> lore = Arrays.asList(
-            "§7Drink at night to start The Curse",
-            "§cBeware the undead plague!"
+        meta.displayName(Component.text("Curse Trigger", NamedTextColor.DARK_RED));
+        List<Component> lore = Arrays.asList(
+            Component.text("Drink at night to start The Curse", NamedTextColor.GRAY),
+            Component.text("Beware the undead plague!", NamedTextColor.RED)
         );
-        meta.setLore(lore);
+        meta.lore(lore);
         
         meta.setBasePotionType(PotionType.AWKWARD); // Base type for appearance
         meta.addCustomEffect(new PotionEffect(PotionEffectType.BAD_OMEN, 1, 0), true);
@@ -389,14 +405,22 @@ public class PlagueManager {
                 // Update boss bar visibility for all players in radius
                 plague.updateBossBarVisibility();
                 
-                // Check if player left combat radius
+                // Check player position relative to combat radius
                 int combatRadius = plugin.getConfigManager().getCombatRadius();
-                if (player.getLocation().distance(plague.getStartLocation()) > combatRadius) {
-                    MessageUtil.sendMessage(player, Component.text("You left the curse area! The curse intensifies!", NamedTextColor.RED));
-                    applyPoisonPenalty(plague);
-                    plague.endPlague(false);
-                    cancel();
-                    return;
+                int warningDistance = plugin.getConfigManager().getWarningDistance();
+                double distanceFromStart = player.getLocation().distance(plague.getStartLocation());
+                
+                // Check if player is approaching the boundary (warning zone)
+                if (distanceFromStart > (combatRadius - warningDistance) && distanceFromStart <= combatRadius) {
+                    PlagueManager.this.handleWarningZone(plague, player);
+                }
+                
+                // Check if player left combat radius
+                if (distanceFromStart > combatRadius) {
+                    PlagueManager.this.handlePlayerLeftArea(plague, player);
+                } else if (plague.isOutsideArea()) {
+                    // Player returned to combat area
+                    PlagueManager.this.handlePlayerReturnedToArea(plague, player);
                 }
                 
                 // Check if it's daylight and player doesn't have antidote
@@ -410,5 +434,79 @@ public class PlagueManager {
                 }
             }
         }.runTaskTimer(plugin, 20L, 20L); // Check every second
+    }
+    
+    public void resetPlague(Player player) {
+        resetPlague(player, true);
+    }
+    
+    public void resetPlague(Player player, boolean setCooldown) {
+        Plague plague = activePlagues.get(player.getUniqueId());
+        if (plague != null) {
+            plague.endPlague(false);
+        }
+        
+        // Set cooldown if requested
+        if (setCooldown) {
+            plugin.getCooldownManager().setCooldown(player);
+        }
+        
+        // Send reset message
+        MessageUtil.sendMessage(player, Component.text("Your curse has been reset! You must wait before starting another one.", NamedTextColor.YELLOW));
+    }
+    
+    private void handleWarningZone(Plague plague, Player player) {
+        long currentTime = System.currentTimeMillis();
+        int warningCooldown = plugin.getConfigManager().getWarningCooldownSeconds() * 1000;
+        
+        // Check if enough time has passed since last warning
+        if (currentTime - plague.getLastWarningTime() >= warningCooldown) {
+            MessageUtil.sendMessage(player, Component.text("⚠ WARNING: You are approaching the curse boundary!", NamedTextColor.YELLOW));
+            MessageUtil.sendMessage(player, Component.text("Leaving the area will poison you, but the curse will continue!", NamedTextColor.GOLD));
+            plague.setLastWarningTime(currentTime);
+            plague.setHasBeenWarned(true);
+        }
+    }
+    
+    private void handlePlayerLeftArea(Plague plague, Player player) {
+        if (!plague.isOutsideArea()) {
+            // Player just left the area
+            plague.setOutsideArea(true);
+            
+            MessageUtil.sendMessage(player, Component.text("You left the cursed area! The curse poison flows through you!", NamedTextColor.RED));
+            MessageUtil.sendMessage(player, Component.text("Return to the cursed area to cleanse the poison!", NamedTextColor.YELLOW));
+            
+            // Apply poison effect
+            applyPoisonEffect(player);
+            
+            // Update boss bar to show poisoned state
+            plague.getBossBar().setTitle("The Curse - Round " + plague.getCurrentRound() + " (POISONED - Return to Area!)");
+            plague.getBossBar().setColor(BarColor.PURPLE);
+        } else {
+            // Player is still outside, maintain poison effect
+            if (!player.hasPotionEffect(PotionEffectType.POISON)) {
+                applyPoisonEffect(player);
+            }
+        }
+    }
+    
+    private void handlePlayerReturnedToArea(Plague plague, Player player) {
+        // Player returned to the cursed area
+        plague.setOutsideArea(false);
+        plague.setHasBeenWarned(false);
+        
+        MessageUtil.sendMessage(player, Component.text("You returned to the cursed area! The poison subsides.", NamedTextColor.GREEN));
+        
+        // Remove poison effect
+        player.removePotionEffect(PotionEffectType.POISON);
+        
+        // Update boss bar back to normal
+        plague.getBossBar().setTitle("The Curse - Round " + plague.getCurrentRound());
+        plague.getBossBar().setColor(BarColor.RED);
+    }
+    
+    private void applyPoisonEffect(Player player) {
+        // Apply a continuous poison effect
+        player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 1, false, true));
     }
 }

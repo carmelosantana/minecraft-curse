@@ -36,7 +36,7 @@ public class ConfigManager {
     }
     
     public int getTimeLimitPerRound() {
-        return config.getInt("plague.timeLimitPerRound", 60);
+        return config.getInt("plague.timeLimitPerRound", 180);
     }
     
     public boolean isAllowTerrainDamage() {
@@ -55,8 +55,20 @@ public class ConfigManager {
         return config.getInt("plague.combatRadius", 30);
     }
     
+    public int getWarningDistance() {
+        return config.getInt("plague.warningDistance", 5);
+    }
+    
+    public int getWarningCooldownSeconds() {
+        return config.getInt("plague.warningCooldownSeconds", 10);
+    }
+    
     public int getMinDistanceFromVillages() {
         return config.getInt("plague.minDistanceFromVillages", 100);
+    }
+    
+    public int getResetCooldownMinutes() {
+        return config.getInt("plague.resetCooldownMinutes", 5);
     }
     
     // Leaderboard Configuration

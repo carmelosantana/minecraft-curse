@@ -37,6 +37,8 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
                 return handleStart(sender, args);
             case "stop":
                 return handleStop(sender, args);
+            case "reset":
+                return handleReset(sender, args);
             case "leaderboard":
             case "lb":
                 return handleLeaderboard(sender, args);
@@ -50,13 +52,40 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
     }
     
     private boolean handleStart(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("curse.start")) {
-            MessageUtil.sendMessage(sender, Component.text("You don't have permission to start a curse!", NamedTextColor.RED));
+        if (!sender.hasPermission("curse.admin")) {
+            MessageUtil.sendMessage(sender, Component.text("You don't have permission to force start a curse!", NamedTextColor.RED));
             return true;
         }
         
+        // Check if targeting another player
+        if (args.length > 1) {
+            // Admin starting curse on another player
+            Player target = plugin.getServer().getPlayer(args[1]);
+            if (target == null) {
+                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                return true;
+            }
+            
+            // Check if target already has an active plague
+            if (plugin.getPlagueManager().hasActivePlague(target)) {
+                MessageUtil.sendMessage(sender, Component.text(target.getName() + " already has an active curse!", NamedTextColor.RED));
+                return true;
+            }
+            
+            // Start the plague, bypassing cooldown
+            boolean started = plugin.getPlagueManager().startPlague(target, true);
+            if (started) {
+                MessageUtil.sendMessage(sender, Component.text("Started curse for " + target.getName() + "!", NamedTextColor.GREEN));
+                MessageUtil.sendMessage(target, Component.text("An admin has started a curse on you!", NamedTextColor.GOLD));
+            } else {
+                MessageUtil.sendMessage(sender, Component.text("Failed to start curse for " + target.getName() + ". Check conditions and try again.", NamedTextColor.RED));
+            }
+            return true;
+        }
+        
+        // Self-start (original behavior)
         if (!(sender instanceof Player player)) {
-            MessageUtil.sendMessage(sender, Component.text("Only players can start a curse!", NamedTextColor.RED));
+            MessageUtil.sendMessage(sender, Component.text("Only players can start a curse on themselves!", NamedTextColor.RED));
             return true;
         }
         
@@ -66,8 +95,16 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         
+        // Check cooldown
+        if (plugin.getCooldownManager().hasCooldown(player)) {
+            long remainingSeconds = plugin.getCooldownManager().getRemainingCooldownSeconds(player);
+            long remainingMinutes = remainingSeconds / 60;
+            MessageUtil.sendMessage(sender, Component.text("You must wait " + remainingMinutes + " minutes before starting another curse!", NamedTextColor.RED));
+            return true;
+        }
+        
         // Start the plague
-        boolean started = plugin.getPlagueManager().startPlague(player);
+        boolean started = plugin.getPlagueManager().startPlague(player, true); // Bypass cooldown for admin command
         if (started) {
             MessageUtil.sendMessage(sender, Component.text("The curse has begun!", NamedTextColor.GOLD));
         } else {
@@ -78,13 +115,34 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
     }
     
     private boolean handleStop(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("curse.stop")) {
+        if (!sender.hasPermission("curse.admin")) {
             MessageUtil.sendMessage(sender, Component.text("You don't have permission to stop a curse!", NamedTextColor.RED));
             return true;
         }
         
+        // Check if targeting another player
+        if (args.length > 1) {
+            // Admin stopping curse on another player
+            Player target = plugin.getServer().getPlayer(args[1]);
+            if (target == null) {
+                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                return true;
+            }
+            
+            // Stop the plague
+            boolean stopped = plugin.getPlagueManager().stopPlague(target);
+            if (stopped) {
+                MessageUtil.sendMessage(sender, Component.text("Stopped curse for " + target.getName() + "!", NamedTextColor.GREEN));
+                MessageUtil.sendMessage(target, Component.text("An admin has stopped your curse!", NamedTextColor.YELLOW));
+            } else {
+                MessageUtil.sendMessage(sender, Component.text(target.getName() + " doesn't have an active curse!", NamedTextColor.RED));
+            }
+            return true;
+        }
+        
+        // Self-stop (original behavior)
         if (!(sender instanceof Player player)) {
-            MessageUtil.sendMessage(sender, Component.text("Only players can stop their curse!", NamedTextColor.RED));
+            MessageUtil.sendMessage(sender, Component.text("Only players can stop their own curse!", NamedTextColor.RED));
             return true;
         }
         
@@ -95,6 +153,41 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         } else {
             MessageUtil.sendMessage(sender, Component.text("You don't have an active curse!", NamedTextColor.RED));
         }
+        
+        return true;
+    }
+    
+    private boolean handleReset(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("curse.admin")) {
+            MessageUtil.sendMessage(sender, Component.text("You don't have permission to reset a curse!", NamedTextColor.RED));
+            return true;
+        }
+        
+        // Check if targeting another player
+        if (args.length > 1) {
+            // Admin resetting curse on another player
+            Player target = plugin.getServer().getPlayer(args[1]);
+            if (target == null) {
+                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                return true;
+            }
+            
+            // Reset the plague and cooldown
+            plugin.getPlagueManager().resetPlague(target, true);
+            MessageUtil.sendMessage(sender, Component.text("Reset curse for " + target.getName() + "!", NamedTextColor.GREEN));
+            MessageUtil.sendMessage(target, Component.text("An admin has reset your curse!", NamedTextColor.YELLOW));
+            return true;
+        }
+        
+        // Self-reset
+        if (!(sender instanceof Player player)) {
+            MessageUtil.sendMessage(sender, Component.text("Only players can reset their own curse!", NamedTextColor.RED));
+            return true;
+        }
+        
+        // Reset the plague
+        plugin.getPlagueManager().resetPlague(player, true);
+        MessageUtil.sendMessage(sender, Component.text("Your curse has been reset!", NamedTextColor.GREEN));
         
         return true;
     }
@@ -122,10 +215,12 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
     
     private void showHelp(CommandSender sender) {
         MessageUtil.sendMessage(sender, Component.text("=== The Curse Commands ===", NamedTextColor.GOLD));
-        MessageUtil.sendMessage(sender, Component.text("/curse start", NamedTextColor.YELLOW)
-            .append(Component.text(" - Force start a curse (admin)", NamedTextColor.GRAY)));
-        MessageUtil.sendMessage(sender, Component.text("/curse stop", NamedTextColor.YELLOW)
-            .append(Component.text(" - Force stop current curse (admin)", NamedTextColor.GRAY)));
+        MessageUtil.sendMessage(sender, Component.text("/curse start [player]", NamedTextColor.YELLOW)
+            .append(Component.text(" - Start a curse (admin)", NamedTextColor.GRAY)));
+        MessageUtil.sendMessage(sender, Component.text("/curse stop [player]", NamedTextColor.YELLOW)
+            .append(Component.text(" - Stop a curse (admin)", NamedTextColor.GRAY)));
+        MessageUtil.sendMessage(sender, Component.text("/curse reset [player]", NamedTextColor.YELLOW)
+            .append(Component.text(" - Reset a curse and set cooldown (admin)", NamedTextColor.GRAY)));
         MessageUtil.sendMessage(sender, Component.text("/curse leaderboard", NamedTextColor.YELLOW)
             .append(Component.text(" - View curse statistics", NamedTextColor.GRAY)));
         MessageUtil.sendMessage(sender, Component.text("/curse reload", NamedTextColor.YELLOW)
@@ -136,13 +231,15 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         MessageUtil.sendMessage(sender, Component.text(""));
         MessageUtil.sendMessage(sender, Component.text("To start a curse naturally:", NamedTextColor.AQUA));
         MessageUtil.sendMessage(sender, Component.text("Drink a Bad Omen potion at night!", NamedTextColor.WHITE));
+        MessageUtil.sendMessage(sender, Component.text(""));
+        MessageUtil.sendMessage(sender, Component.text("Note: Curse resets on death or quit/rejoin!", NamedTextColor.RED));
     }
     
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
-            List<String> subCommands = Arrays.asList("start", "stop", "leaderboard", "reload", "help");
+            List<String> subCommands = Arrays.asList("start", "stop", "reset", "leaderboard", "reload", "help");
             
             for (String subCommand : subCommands) {
                 if (subCommand.toLowerCase().startsWith(args[0].toLowerCase())) {
@@ -150,6 +247,22 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
                 }
             }
             return completions;
+        }
+        
+        if (args.length == 2) {
+            String subCommand = args[0].toLowerCase();
+            if (subCommand.equals("start") || subCommand.equals("stop") || subCommand.equals("reset")) {
+                // Tab complete player names for admin commands
+                List<String> completions = new ArrayList<>();
+                String partial = args[1].toLowerCase();
+                
+                for (Player player : plugin.getServer().getOnlinePlayers()) {
+                    if (player.getName().toLowerCase().startsWith(partial)) {
+                        completions.add(player.getName());
+                    }
+                }
+                return completions;
+            }
         }
         
         return new ArrayList<>();

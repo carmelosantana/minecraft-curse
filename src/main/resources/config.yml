@@ -13,7 +13,7 @@ plague:
   spawnRadius: 20
   
   # Time limit per round (seconds, 0 = no limit)
-  timeLimitPerRound: 60
+  timeLimitPerRound: 180
   
   # Allow mobs to damage terrain
   allowTerrainDamage: false
@@ -24,11 +24,20 @@ plague:
   # Enable visual effects (particles, sounds)
   visualEffects: true
   
-  # Combat radius - leaving this area fails the plague
+  # Combat radius - leaving this area applies poison but continues curse
   combatRadius: 30
+  
+  # Warning distance - warn player when they get this close to the boundary
+  warningDistance: 5
+  
+  # Warning cooldown - seconds between warnings to prevent spam
+  warningCooldownSeconds: 10
   
   # Minimum distance from villages/protected areas
   minDistanceFromVillages: 100
+  
+  # Cooldown after curse reset (minutes)
+  resetCooldownMinutes: 5
 
 # Rewards Configuration
 rewards:

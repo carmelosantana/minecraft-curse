@@ -26,6 +26,9 @@ public class Plague {
     private boolean isActive;
     private boolean hasAntidote;
     private int initialMobCount; // Track initial mobs for health bar progress
+    private boolean isOutsideArea; // Track if player is outside cursed area
+    private boolean hasBeenWarned; // Track if player has been warned about leaving
+    private long lastWarningTime; // Track last warning time to prevent spam
     
     private BossBar bossBar;
     private List<Entity> activeMobs;
@@ -275,5 +278,29 @@ public class Plague {
     
     public void setInitialMobCount(int count) {
         this.initialMobCount = count;
+    }
+    
+    public boolean isOutsideArea() {
+        return isOutsideArea;
+    }
+    
+    public void setOutsideArea(boolean outsideArea) {
+        this.isOutsideArea = outsideArea;
+    }
+    
+    public boolean hasBeenWarned() {
+        return hasBeenWarned;
+    }
+    
+    public void setHasBeenWarned(boolean hasBeenWarned) {
+        this.hasBeenWarned = hasBeenWarned;
+    }
+    
+    public long getLastWarningTime() {
+        return lastWarningTime;
+    }
+    
+    public void setLastWarningTime(long lastWarningTime) {
+        this.lastWarningTime = lastWarningTime;
     }
 }

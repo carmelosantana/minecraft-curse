@@ -1,6 +1,7 @@
 package org.xpfarm.curse.listeners;
 
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,7 +10,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.xpfarm.curse.CursePlugin;
 import org.xpfarm.curse.models.Plague;
 import org.xpfarm.curse.utils.MessageUtil;
@@ -102,27 +102,58 @@ public class PotionListener implements Listener {
     
     private void handleAntidotePotion(Player player, PlayerItemConsumeEvent event) {
         Plague plague = plugin.getPlagueManager().getPlague(player);
-        if (plague == null) {
-            MessageUtil.sendMessage(player, Component.text("You don't have an active curse!", NamedTextColor.RED));
-            return;
+        
+        // Check what effects the player has before curing
+        boolean hadPoison = player.hasPotionEffect(PotionEffectType.POISON);
+        boolean hadGlowing = player.hasPotionEffect(PotionEffectType.GLOWING);
+        
+        // If there's an active curse
+        if (plague != null) {
+            if (!plague.hasAntidote()) {
+                MessageUtil.sendMessage(player, Component.text("This antidote isn't yours to use yet!", NamedTextColor.RED));
+                event.setCancelled(true);
+                return;
+            }
+            
+            // End the plague successfully
+            MessageUtil.sendMessage(player, Component.text("The antidote courses through your veins...", NamedTextColor.GREEN));
+            
+            // Remove curse effects
+            player.removePotionEffect(PotionEffectType.POISON);
+            player.removePotionEffect(PotionEffectType.GLOWING);
+            
+            // Provide specific feedback about what was cured
+            if (hadPoison && hadGlowing) {
+                MessageUtil.sendMessage(player, Component.text("The curse and poisoning effect have been cured!", NamedTextColor.GOLD));
+            } else if (hadPoison) {
+                MessageUtil.sendMessage(player, Component.text("The curse and poisoning effect have been cured!", NamedTextColor.GOLD));
+            } else {
+                MessageUtil.sendMessage(player, Component.text("The curse has been lifted!", NamedTextColor.GOLD));
+            }
+            
+            // End plague
+            plague.endPlague(true);
+        } else {
+            // No active curse - check if player has poison effects to cure
+            if (hadPoison || hadGlowing) {
+                MessageUtil.sendMessage(player, Component.text("The antidote courses through your veins...", NamedTextColor.GREEN));
+                
+                // Remove curse effects
+                player.removePotionEffect(PotionEffectType.POISON);
+                player.removePotionEffect(PotionEffectType.GLOWING);
+                
+                // Provide specific feedback about what was cured
+                if (hadPoison && hadGlowing) {
+                    MessageUtil.sendMessage(player, Component.text("The poisoning and glowing effects have been cured!", NamedTextColor.GOLD));
+                } else if (hadPoison) {
+                    MessageUtil.sendMessage(player, Component.text("The poisoning effect has been cured!", NamedTextColor.GOLD));
+                } else if (hadGlowing) {
+                    MessageUtil.sendMessage(player, Component.text("The glowing effect has been cured!", NamedTextColor.GOLD));
+                }
+            } else {
+                MessageUtil.sendMessage(player, Component.text("You don't have any curse effects to cure!", NamedTextColor.YELLOW));
+            }
         }
-        
-        if (!plague.hasAntidote()) {
-            MessageUtil.sendMessage(player, Component.text("This antidote isn't yours to use yet!", NamedTextColor.RED));
-            event.setCancelled(true);
-            return;
-        }
-        
-        // End the plague successfully
-        MessageUtil.sendMessage(player, Component.text("The antidote courses through your veins...", NamedTextColor.GREEN));
-        MessageUtil.sendMessage(player, Component.text("The curse has been lifted!", NamedTextColor.GOLD));
-        
-        // Remove poison effects
-        player.removePotionEffect(org.bukkit.potion.PotionEffectType.POISON);
-        player.removePotionEffect(org.bukkit.potion.PotionEffectType.GLOWING);
-        
-        // End plague
-        plague.endPlague(true);
     }
     
     private void handleUndoPotion(Player player, PlayerItemConsumeEvent event) {
@@ -132,17 +163,28 @@ public class PotionListener implements Listener {
             return;
         }
         
+        // Check what effects the player has before curing
+        boolean hadPoison = player.hasPotionEffect(PotionEffectType.POISON);
+        boolean hadWeakness = player.hasPotionEffect(PotionEffectType.WEAKNESS);
+        boolean hadSlowness = player.hasPotionEffect(PotionEffectType.SLOWNESS);
+        
         // Restore health and remove negative effects
-        player.setHealth(player.getMaxHealth());
+        player.setHealth(player.getAttribute(Attribute.MAX_HEALTH).getValue());
         player.setFoodLevel(20);
         player.setSaturation(20.0f);
         
         // Remove negative potion effects
-        player.removePotionEffect(org.bukkit.potion.PotionEffectType.POISON);
-        player.removePotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
-        player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS);
+        player.removePotionEffect(PotionEffectType.POISON);
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
+        player.removePotionEffect(PotionEffectType.SLOWNESS);
         
         MessageUtil.sendMessage(player, Component.text("The undo potion restores your condition!", NamedTextColor.BLUE));
+        
+        // Provide specific feedback about what was cured
+        if (hadPoison || hadWeakness || hadSlowness) {
+            MessageUtil.sendMessage(player, Component.text("Negative effects have been cleansed!", NamedTextColor.GREEN));
+        }
+        
         MessageUtil.sendMessage(player, Component.text("You feel refreshed and ready to continue!", NamedTextColor.GREEN));
     }
 }

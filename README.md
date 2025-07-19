@@ -14,6 +14,9 @@ A dynamic survival challenge plugin for Minecraft that introduces plague-style s
 - **Combat Radius**: Stay within the designated area or face consequences
 - **Poison Penalty**: Failure results in deadly poisoning until antidote is consumed
 - **Final Wave**: Unwinnable challenge that forces strategic antidote usage
+- **Automatic Reset**: Curse resets on player death or quit/rejoin
+- **Cooldown System**: Configurable cooldown period after curse reset
+- **Admin Commands**: Full admin control over player curses
 
 ## Installation
 
@@ -49,10 +52,29 @@ The compiled JAR will be available in the `target/` directory.
 3. Survive the waves of enhanced zombies
 4. Use the antidote from the first reward chest to end the curse
 
+### Curse Reset Conditions
+
+**The curse will automatically reset in the following situations:**
+
+- **Player Death**: All progress is lost and a cooldown is applied
+- **Player Quit/Rejoin**: Progress is lost and a cooldown is applied
+- **Admin Reset**: Administrators can manually reset any player's curse
+
+**After a reset, you must wait for the cooldown period (default: 5 minutes) before starting a new curse.**
+
+### Admin Commands
+
+Administrators can manage player curses using the following commands:
+
+- `/curse start <player>` - Force start a curse on a specific player
+- `/curse stop <player>` - Force stop a specific player's curse
+- `/curse reset <player>` - Reset a player's curse and apply cooldown
+
 ### Commands
 
-- `/curse start` - Force start a curse (admin only)
-- `/curse stop` - Force stop current curse (admin only)
+- `/curse start [player]` - Force start a curse (admin only)
+- `/curse stop [player]` - Force stop current curse (admin only)
+- `/curse reset [player]` - Reset a curse and apply cooldown (admin only)
 - `/curse leaderboard` - View curse statistics and rankings
 - `/curse reload` - Reload plugin configuration (admin only)
 - `/curse help` - Show available commands
@@ -63,6 +85,7 @@ The compiled JAR will be available in the `target/` directory.
 - `curse.use` - Basic usage and leaderboard access (default: true)
 - `curse.start` - Can force start curses (default: op)
 - `curse.stop` - Can force stop curses (default: op)
+- `curse.reset` - Can reset curses and apply cooldown (default: op)
 - `curse.reload` - Can reload configuration (default: op)
 
 ## Configuration
@@ -80,6 +103,7 @@ plague:
   visualEffects: true            # Enable particle and sound effects
   combatRadius: 30               # Maximum distance from start location
   minDistanceFromVillages: 100   # Minimum distance from villages
+  resetCooldownMinutes: 5        # Cooldown after curse reset (minutes)
 
 rewards:
   chestLoot:                     # Configurable loot tables
@@ -164,9 +188,14 @@ If you encounter any issues or have questions:
 
 ## Changelog
 
-### Version 1.0.0
+### Version 0.1.0
+
 - Initial release
 - Core plague system implementation
 - Boss bar and leaderboard integration
 - Configurable reward system
 - Persistent data storage
+- **NEW**: Automatic curse reset on player death
+- **NEW**: Curse reset on quit/rejoin with cooldown system
+- **NEW**: Admin commands for managing player curses
+- **NEW**: Configurable cooldown period (default: 5 minutes)
