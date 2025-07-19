@@ -8,7 +8,6 @@ import org.xpfarm.curse.managers.PlagueManager;
 import org.xpfarm.curse.managers.LeaderboardManager;
 import org.xpfarm.curse.managers.ConfigManager;
 import org.xpfarm.curse.managers.CooldownManager;
-import org.xpfarm.curse.utils.MessageUtil;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
