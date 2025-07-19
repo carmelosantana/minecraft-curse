@@ -48,6 +48,9 @@ public class PlayerListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         
+        // Stop HUD for quitting player
+        plugin.getHUDManager().stopHUD(player);
+        
         // Track quit time if player has active curse
         if (plugin.getPlagueManager().hasActivePlague(player)) {
             lastQuitTime.put(player.getUniqueId(), System.currentTimeMillis());
@@ -68,6 +71,19 @@ public class PlayerListener implements Listener {
             lastQuitTime.remove(playerId);
             
             MessageUtil.sendMessage(player, Component.text("Your curse was reset due to leaving the server. You must wait before starting another one.", NamedTextColor.YELLOW));
+        }
+        
+        // Check if player should see HUD from nearby active plagues
+        for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+            Plague plague = plugin.getPlagueManager().getPlague(onlinePlayer);
+            if (plague != null && plague.isActive()) {
+                // Check if joining player is within range
+                if (player.getWorld().equals(onlinePlayer.getWorld()) &&
+                    player.getLocation().distance(onlinePlayer.getLocation()) <= plugin.getConfigManager().getCombatRadius()) {
+                    plugin.getHUDManager().startHUD(player, plague);
+                    break; // Only show one HUD if multiple plagues are nearby
+                }
+            }
         }
     }
     

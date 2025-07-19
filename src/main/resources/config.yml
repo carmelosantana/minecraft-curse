@@ -39,6 +39,26 @@ plague:
   # Cooldown after curse reset (minutes)
   resetCooldownMinutes: 5
 
+# HUD Configuration
+hud:
+  # Enable HUD display for plague information
+  enabled: true
+  
+  # Update interval in ticks (20 ticks = 1 second)
+  updateInterval: 20
+  
+  # Show timer countdown (requires timeLimitPerRound > 0)
+  showTimer: true
+  
+  # Show kill count
+  showKills: true
+  
+  # Show remaining mobs in current round
+  showRemainingMobs: true
+  
+  # Show antidote status
+  showAntidoteStatus: true
+
 # Rewards Configuration
 rewards:
   # Loot that can appear in reward chests

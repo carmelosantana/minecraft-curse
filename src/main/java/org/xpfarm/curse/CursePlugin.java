@@ -8,6 +8,7 @@ import org.xpfarm.curse.managers.PlagueManager;
 import org.xpfarm.curse.managers.LeaderboardManager;
 import org.xpfarm.curse.managers.ConfigManager;
 import org.xpfarm.curse.managers.CooldownManager;
+import org.xpfarm.curse.managers.HUDManager;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,6 +20,7 @@ public class CursePlugin extends JavaPlugin {
     private LeaderboardManager leaderboardManager;
     private ConfigManager configManager;
     private CooldownManager cooldownManager;
+    private HUDManager hudManager;
     
     @Override
     public void onEnable() {
@@ -27,6 +29,7 @@ public class CursePlugin extends JavaPlugin {
         // Initialize managers
         configManager = new ConfigManager(this);
         cooldownManager = new CooldownManager(this);
+        hudManager = new HUDManager(this);
         plagueManager = new PlagueManager(this);
         leaderboardManager = new LeaderboardManager(this);
         
@@ -56,6 +59,11 @@ public class CursePlugin extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        // Stop all HUD tasks
+        if (hudManager != null) {
+            hudManager.stopAllHUDs();
+        }
+        
         // Stop all active plagues
         if (plagueManager != null) {
             plagueManager.stopAllPlagues();
@@ -92,6 +100,10 @@ public class CursePlugin extends JavaPlugin {
     
     public CooldownManager getCooldownManager() {
         return cooldownManager;
+    }
+    
+    public HUDManager getHUDManager() {
+        return hudManager;
     }
     
     public void reloadPlugin() {

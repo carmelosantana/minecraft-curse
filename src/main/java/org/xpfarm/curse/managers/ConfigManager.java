@@ -92,4 +92,29 @@ public class ConfigManager {
     public boolean isLogPlayerActions() {
         return config.getBoolean("debug.logPlayerActions", false);
     }
+    
+    // HUD Configuration
+    public boolean isHUDEnabled() {
+        return config.getBoolean("hud.enabled", true);
+    }
+    
+    public int getHUDUpdateInterval() {
+        return config.getInt("hud.updateInterval", 20);
+    }
+    
+    public boolean isShowTimer() {
+        return config.getBoolean("hud.showTimer", true);
+    }
+    
+    public boolean isShowKills() {
+        return config.getBoolean("hud.showKills", true);
+    }
+    
+    public boolean isShowRemainingMobs() {
+        return config.getBoolean("hud.showRemainingMobs", true);
+    }
+    
+    public boolean isShowAntidoteStatus() {
+        return config.getBoolean("hud.showAntidoteStatus", true);
+    }
 }
