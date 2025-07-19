@@ -23,6 +23,7 @@ public class Plague {
     private int currentRound;
     private int totalKills;
     private long startTime;
+    private long roundStartTime; // Track when current round started for timer
     private boolean isActive;
     private boolean hasAntidote;
     private int initialMobCount; // Track initial mobs for health bar progress
@@ -44,12 +45,17 @@ public class Plague {
         this.currentRound = 1;
         this.totalKills = 0;
         this.startTime = System.currentTimeMillis();
+        this.roundStartTime = this.startTime; // Initialize round timer
         this.isActive = true;
         this.hasAntidote = false;
         
         this.activeMobs = new ArrayList<>();
         
         initializeBossBar();
+        
+        // Start HUD display for all nearby players
+        plugin.getHUDManager().startHUD(player, this);
+        plugin.getHUDManager().updateHUDForAllNearbyPlayers(this);
     }
     
     private void initializeBossBar() {
@@ -70,6 +76,9 @@ public class Plague {
         updateBossBar();
         updateBossBarVisibility();
         
+        // Update HUD for all nearby players
+        plugin.getHUDManager().updateHUDForAllNearbyPlayers(this);
+        
         // Check if this is the final wave
         if (currentRound > plugin.getConfigManager().getMaxRounds()) {
             startFinalWave();
@@ -82,6 +91,9 @@ public class Plague {
         // Clear previous mobs
         clearActiveMobs();
         
+        // Reset round timer
+        this.roundStartTime = System.currentTimeMillis();
+        
         // Calculate mob count and types based on round and player XP
         int mobCount = calculateMobCount();
         
@@ -93,6 +105,9 @@ public class Plague {
             bossBar.setProgress(1.0);
             updateBossBarVisibility();
         }
+        
+        // Update HUD for all nearby players
+        plugin.getHUDManager().updateHUDForAllNearbyPlayers(this);
         
         // Start round timer if enabled
         startRoundTimer();
@@ -144,6 +159,9 @@ public class Plague {
         // Update health progress as mobs are killed
         updateHealthProgress();
         
+        // Update HUD for all nearby players to reflect new kill count and remaining mobs
+        plugin.getHUDManager().updateHUDForAllNearbyPlayers(this);
+        
         // Check if round is complete
         if (activeMobs.isEmpty() && isActive) {
             completeRound();
@@ -159,6 +177,8 @@ public class Plague {
         // First round completion gives antidote
         if (currentRound == 1) {
             hasAntidote = true;
+            // Update HUD to show antidote availability
+            plugin.getHUDManager().updateHUDForAllNearbyPlayers(this);
         }
         
         // Spawn reward chest
@@ -190,6 +210,14 @@ public class Plague {
         // Remove boss bar
         if (bossBar != null) {
             bossBar.removeAll();
+        }
+        
+        // Stop HUD display for all nearby players
+        for (org.bukkit.entity.Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+            if (onlinePlayer.getWorld().equals(startLocation.getWorld()) &&
+                onlinePlayer.getLocation().distance(startLocation) <= plugin.getConfigManager().getCombatRadius()) {
+                plugin.getHUDManager().stopHUD(onlinePlayer);
+            }
         }
         
         // Clear mobs
@@ -262,6 +290,7 @@ public class Plague {
     public int getCurrentRound() { return currentRound; }
     public int getTotalKills() { return totalKills; }
     public long getStartTime() { return startTime; }
+    public long getRoundStartTime() { return roundStartTime; }
     public boolean isActive() { return isActive; }
     public boolean hasAntidote() { return hasAntidote; }
     public List<Entity> getActiveMobs() { return activeMobs; }
