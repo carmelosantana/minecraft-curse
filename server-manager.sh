@@ -8,7 +8,7 @@ set -e
 # Configuration
 SERVER_DIR="server"
 PLUGIN_NAME="curse"
-PLUGIN_JAR="target/${PLUGIN_NAME}-0.1.1.jar"
+PLUGIN_JAR="target/${PLUGIN_NAME}-0.1.2.jar"
 SERVER_JAR="paper.jar"
 MIN_RAM="2G"
 MAX_RAM="4G"
@@ -231,7 +231,7 @@ show_status() {
     fi
     
     # Check plugin status
-    if [[ -f "$SERVER_DIR/plugins/${PLUGIN_NAME}-0.1.1.jar" ]]; then
+    if [[ -f "$SERVER_DIR/plugins/${PLUGIN_NAME}-0.1.2.jar" ]]; then
         print_success "The Curse plugin is installed"
     else
         print_warning "The Curse plugin is not installed"

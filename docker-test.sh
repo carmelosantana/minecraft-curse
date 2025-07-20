@@ -29,7 +29,7 @@ print_error() {
 }
 
 # Ensure plugin is built
-if [[ ! -f "target/curse-0.1.1.jar" ]]; then
+if [[ ! -f "target/curse-0.1.2.jar" ]]; then
     print_error "Plugin JAR not found. Run 'make build' first."
     exit 1
 fi

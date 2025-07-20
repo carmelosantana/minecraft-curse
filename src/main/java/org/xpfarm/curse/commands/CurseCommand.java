@@ -39,6 +39,8 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
                 return handleStop(sender, args);
             case "reset":
                 return handleReset(sender, args);
+            case "book":
+                return handleBook(sender, args);
             case "leaderboard":
             case "lb":
                 return handleLeaderboard(sender, args);
@@ -202,6 +204,52 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         return true;
     }
     
+    private boolean handleBook(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("curse.admin")) {
+            MessageUtil.sendMessage(sender, Component.text("You don't have permission to give cursed books!", NamedTextColor.RED));
+            return true;
+        }
+        
+        // Determine target player
+        Player target;
+        if (args.length > 1) {
+            // Admin giving book to another player
+            target = plugin.getServer().getPlayer(args[1]);
+            if (target == null) {
+                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                return true;
+            }
+        } else {
+            // Self-give (only if sender is a player)
+            if (!(sender instanceof Player)) {
+                MessageUtil.sendMessage(sender, Component.text("Console must specify a target player!", NamedTextColor.RED));
+                MessageUtil.sendMessage(sender, Component.text("Usage: /curse book <player>", NamedTextColor.YELLOW));
+                return true;
+            }
+            target = (Player) sender;
+        }
+        
+        // Check if player has inventory space
+        if (target.getInventory().firstEmpty() == -1) {
+            MessageUtil.sendMessage(sender, Component.text("Player's inventory is full!", NamedTextColor.RED));
+            return true;
+        }
+        
+        // Give the cursed book
+        target.getInventory().addItem(plugin.getCursedBookManager().createCursedBook());
+        
+        // Send messages
+        MessageUtil.sendMessage(target, Component.text("You have received a ", NamedTextColor.GRAY)
+            .append(Component.text("ZP25", NamedTextColor.DARK_RED))
+            .append(Component.text(" cursed book!", NamedTextColor.GRAY)));
+        
+        if (!target.equals(sender)) {
+            MessageUtil.sendMessage(sender, Component.text("Given cursed book to " + target.getName() + "!", NamedTextColor.GREEN));
+        }
+        
+        return true;
+    }
+    
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("curse.reload")) {
             MessageUtil.sendMessage(sender, Component.text("You don't have permission to reload the plugin!", NamedTextColor.RED));
@@ -221,6 +269,8 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
             .append(Component.text(" - Stop a curse (admin)", NamedTextColor.GRAY)));
         MessageUtil.sendMessage(sender, Component.text("/curse reset [player]", NamedTextColor.YELLOW)
             .append(Component.text(" - Reset a curse and set cooldown (admin)", NamedTextColor.GRAY)));
+        MessageUtil.sendMessage(sender, Component.text("/curse book [player]", NamedTextColor.YELLOW)
+            .append(Component.text(" - Give a cursed book (admin)", NamedTextColor.GRAY)));
         MessageUtil.sendMessage(sender, Component.text("/curse leaderboard", NamedTextColor.YELLOW)
             .append(Component.text(" - View curse statistics", NamedTextColor.GRAY)));
         MessageUtil.sendMessage(sender, Component.text("/curse reload", NamedTextColor.YELLOW)
@@ -230,7 +280,9 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         
         MessageUtil.sendMessage(sender, Component.text(""));
         MessageUtil.sendMessage(sender, Component.text("To start a curse naturally:", NamedTextColor.AQUA));
-        MessageUtil.sendMessage(sender, Component.text("Drink a Bad Omen potion at night!", NamedTextColor.WHITE));
+        MessageUtil.sendMessage(sender, Component.text("• Drink a Bad Omen potion at night", NamedTextColor.WHITE));
+        MessageUtil.sendMessage(sender, Component.text("• Drop ZP25 book near a zombie", NamedTextColor.WHITE));
+        MessageUtil.sendMessage(sender, Component.text("• Craft ZP25 with custom recipe", NamedTextColor.WHITE));
         MessageUtil.sendMessage(sender, Component.text(""));
         MessageUtil.sendMessage(sender, Component.text("Note: Curse resets on death or quit/rejoin!", NamedTextColor.RED));
     }
@@ -239,7 +291,7 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
-            List<String> subCommands = Arrays.asList("start", "stop", "reset", "leaderboard", "reload", "help");
+            List<String> subCommands = Arrays.asList("start", "stop", "reset", "book", "leaderboard", "reload", "help");
             
             for (String subCommand : subCommands) {
                 if (subCommand.toLowerCase().startsWith(args[0].toLowerCase())) {
@@ -251,7 +303,7 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         
         if (args.length == 2) {
             String subCommand = args[0].toLowerCase();
-            if (subCommand.equals("start") || subCommand.equals("stop") || subCommand.equals("reset")) {
+            if (subCommand.equals("start") || subCommand.equals("stop") || subCommand.equals("reset") || subCommand.equals("book")) {
                 // Tab complete player names for admin commands
                 List<String> completions = new ArrayList<>();
                 String partial = args[1].toLowerCase();
