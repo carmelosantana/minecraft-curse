@@ -47,10 +47,62 @@ The compiled JAR will be available in the `target/` directory.
 
 ### Starting a Curse
 
+There are two ways to start a curse:
+
+#### Method 1: Bad Omen Potion (Original)
 1. Wait for nighttime (time 12541-23031)
 2. Drink a Bad Omen potion
 3. Survive the waves of enhanced zombies
 4. Use the antidote from the first reward chest to end the curse
+
+#### Method 2: Cursed Book (ZP25)
+1. Craft or obtain a ZP25 cursed book
+2. Drop the book near a zombie at night
+3. Wait for the zombie to pick up the book
+4. The zombie will vanish with dramatic effects and the curse begins
+
+### Cursed Book (ZP25)
+
+The **ZP25 cursed book** is a special item that provides an alternative way to start the curse. This dark tome is bound with powerful magic and requires specific materials to craft.
+
+#### Obtaining a Cursed Book
+
+**Crafting Recipe:**
+```
+[Spider Eye] [Nether Star] [Spider Eye]
+[Ender Pearl]   [Book]     [Ender Pearl]
+[Rotten Flesh][Rotten Flesh][Rotten Flesh]
+```
+
+**Admin Command:**
+- `/curse book [player]` - Give a cursed book to yourself or another player (admin only)
+
+#### Using the Cursed Book
+
+1. **Drop the Book**: Drop the ZP25 cursed book near any zombie
+2. **Zombie Pickup**: The zombie must be within 10 blocks (configurable) and will pick up the book
+3. **Activation**: The zombie vanishes with a dramatic puff effect and ominous sounds
+4. **Curse Begins**: After a 2-second delay, your curse starts automatically
+
+#### Cursed Book Features
+
+- **Unique Identifier**: Each book has a unique name "ZP25" and custom lore
+- **Same Cooldown Rules**: Follows the same cooldown mechanics as Bad Omen potions
+- **Visual Effects**: Dramatic particles and sounds when activated
+- **Book Consumed**: The book is permanently consumed when used
+- **Night Only**: Must be used at nighttime like other curse triggers
+
+#### Configuration
+
+The cursed book feature can be customized in `config.yml`:
+
+```yaml
+cursedBook:
+  enabled: true                    # Enable/disable cursed book feature
+  pickupRange: 10                  # Range for zombie to detect book
+  enableRecipe: true               # Enable crafting recipe
+  enableActivationEffects: true    # Enable visual effects on activation
+```
 
 ### Curse Reset Conditions
 
@@ -75,6 +127,7 @@ Administrators can manage player curses using the following commands:
 - `/curse start [player]` - Force start a curse (admin only)
 - `/curse stop [player]` - Force stop current curse (admin only)
 - `/curse reset [player]` - Reset a curse and apply cooldown (admin only)
+- `/curse book [player]` - Give a cursed book to yourself or another player (admin only)
 - `/curse leaderboard` - View curse statistics and rankings
 - `/curse reload` - Reload plugin configuration (admin only)
 - `/curse help` - Show available commands
@@ -104,6 +157,12 @@ plague:
   combatRadius: 30               # Maximum distance from start location
   minDistanceFromVillages: 100   # Minimum distance from villages
   resetCooldownMinutes: 5        # Cooldown after curse reset (minutes)
+
+cursedBook:
+  enabled: true                   # Enable cursed book feature
+  pickupRange: 10                 # Range for zombie to detect book (blocks)
+  enableRecipe: true              # Enable crafting recipe
+  enableActivationEffects: true   # Enable visual effects on activation
 
 rewards:
   chestLoot:                     # Configurable loot tables

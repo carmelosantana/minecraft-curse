@@ -117,4 +117,21 @@ public class ConfigManager {
     public boolean isShowAntidoteStatus() {
         return config.getBoolean("hud.showAntidoteStatus", true);
     }
+    
+    // Cursed Book Configuration
+    public boolean isCursedBookEnabled() {
+        return config.getBoolean("cursedBook.enabled", true);
+    }
+    
+    public double getCursedBookPickupRange() {
+        return config.getDouble("cursedBook.pickupRange", 10.0);
+    }
+    
+    public boolean isCursedBookRecipeEnabled() {
+        return config.getBoolean("cursedBook.enableRecipe", true);
+    }
+    
+    public boolean isCursedBookActivationEffectsEnabled() {
+        return config.getBoolean("cursedBook.enableActivationEffects", true);
+    }
 }

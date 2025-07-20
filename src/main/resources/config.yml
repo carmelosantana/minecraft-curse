@@ -39,6 +39,20 @@ plague:
   # Cooldown after curse reset (minutes)
   resetCooldownMinutes: 5
 
+# Cursed Book Configuration
+cursedBook:
+  # Enable the cursed book feature
+  enabled: true
+  
+  # Maximum range for zombie to detect dropped book (blocks)
+  pickupRange: 10
+  
+  # Enable recipe for crafting cursed books
+  enableRecipe: true
+  
+  # Enable visual effects when curse is activated via book
+  enableActivationEffects: true
+
 # HUD Configuration
 hud:
   # Enable HUD display for plague information
