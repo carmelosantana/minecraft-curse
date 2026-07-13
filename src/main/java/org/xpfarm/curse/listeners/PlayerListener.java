@@ -12,6 +12,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.xpfarm.curse.CursePlugin;
 import org.xpfarm.curse.models.Plague;
+import org.xpfarm.curse.mechanics.CursedSpawnMechanic;
 import org.xpfarm.curse.utils.MessageUtil;
 
 import net.kyori.adventure.text.Component;
@@ -22,35 +23,35 @@ import java.util.Map;
 import java.util.UUID;
 
 public class PlayerListener implements Listener {
-    
+
     private final CursePlugin plugin;
     private final Map<UUID, Long> lastQuitTime;
-    
+
     public PlayerListener(CursePlugin plugin) {
         this.plugin = plugin;
         this.lastQuitTime = new HashMap<>();
     }
-    
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        
+
         // Check if player has active curse
         if (plugin.getPlagueManager().hasActivePlague(player)) {
             // Reset the curse and set cooldown
             plugin.getPlagueManager().resetPlague(player, true);
-            
+
             MessageUtil.sendMessage(player, Component.text("Your curse has been reset due to death!", NamedTextColor.RED));
         }
     }
-    
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        
+
         // Stop HUD for quitting player
         plugin.getHUDManager().stopHUD(player);
-        
+
         // Track quit time if player has active curse
         if (plugin.getPlagueManager().hasActivePlague(player)) {
             lastQuitTime.put(player.getUniqueId(), System.currentTimeMillis());
@@ -58,21 +59,21 @@ public class PlayerListener implements Listener {
             plugin.getPlagueManager().stopPlague(player);
         }
     }
-    
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
-        
+
         // Check if player quit with active curse
         if (lastQuitTime.containsKey(playerId)) {
             // Set cooldown for rejoining after quitting with curse
             plugin.getCooldownManager().setCooldown(player);
             lastQuitTime.remove(playerId);
-            
+
             MessageUtil.sendMessage(player, Component.text("Your curse was reset due to leaving the server. You must wait before starting another one.", NamedTextColor.YELLOW));
         }
-        
+
         // Check if player should see HUD from nearby active plagues
         for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
             Plague plague = plugin.getPlagueManager().getPlague(onlinePlayer);
@@ -86,37 +87,60 @@ public class PlayerListener implements Listener {
             }
         }
     }
-    
+
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         Entity entity = event.getEntity();
-        
+        Player killer = event.getEntity().getKiller();
+
         // Check if this entity is part of any active plague
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             Plague plague = plugin.getPlagueManager().getPlague(player);
             if (plague != null && plague.getActiveMobs().contains(entity)) {
                 // This mob was part of the plague
-                plague.onMobKilled(entity);
-                
-                // Give XP bonus for curse mobs
-                if (event.getEntity().getKiller() instanceof Player) {
-                    event.setDroppedExp(event.getDroppedExp() * 2); // Double XP
+
+                // Only give credit if the cursed player killed it or if no specific killer
+                if (killer == null || killer.getUniqueId().equals(player.getUniqueId())) {
+                    plague.onMobKilled(entity);
+
+                    // Give XP bonus only to the cursed player
+                    if (killer != null && killer.getUniqueId().equals(player.getUniqueId())) {
+                        event.setDroppedExp(event.getDroppedExp() * 2); // Double XP
+                    }
+                } else {
+                    // Someone else killed the curse mob - remove it from tracking but no credit
+                    plague.getActiveMobs().remove(entity);
                 }
-                
+
                 break;
             }
         }
+
+        // Check if this entity is part of any active cursed spawn (CS25P)
+        var cursedMechanicManager = plugin.getCursedMechanicManager();
+        if (cursedMechanicManager != null) {
+            var cs25pMechanic = cursedMechanicManager.getMechanic("CS25P");
+            if (cs25pMechanic instanceof CursedSpawnMechanic cursedSpawnMechanic) {
+                // Check if the entity belongs to any CS25P session
+                if (cursedSpawnMechanic.handleMobDeath(entity, killer)) {
+                    // Give XP bonus to cursed player if they killed it
+                    if (killer != null) {
+                        event.setDroppedExp(event.getDroppedExp() * 2); // Double XP
+                    }
+                }
+            }
+        }
     }
-    
+
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        
+
         // Early return if no active plague to improve performance
         if (!plugin.getPlagueManager().hasActivePlague(player)) {
             return;
         }
-        
+
         // Check if player has active plague and moved significantly
         Plague plague = plugin.getPlagueManager().getPlague(player);
         if (plague != null && plague.isActive()) {

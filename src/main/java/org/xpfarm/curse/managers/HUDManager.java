@@ -16,24 +16,24 @@ import java.util.Map;
 import java.util.UUID;
 
 public class HUDManager {
-    
+
     private final CursePlugin plugin;
     private final Map<UUID, BukkitTask> activeTasks;
-    
+
     public HUDManager(CursePlugin plugin) {
         this.plugin = plugin;
         this.activeTasks = new HashMap<>();
     }
-    
+
     /**
      * Start displaying HUD for a player with an active plague
      */
     public void startHUD(Player player, Plague plague) {
         if (player == null || plague == null || !plugin.getConfigManager().isHUDEnabled()) return;
-        
+
         // Stop existing HUD task for this player
         stopHUD(player);
-        
+
         // Create and start new HUD task
         int updateInterval = plugin.getConfigManager().getHUDUpdateInterval();
         BukkitTask task = new BukkitRunnable() {
@@ -44,45 +44,45 @@ public class HUDManager {
                     activeTasks.remove(player.getUniqueId());
                     return;
                 }
-                
+
                 updateHUDDisplay(player, plague);
             }
         }.runTaskTimer(plugin, 0L, updateInterval); // Use configurable update interval
-        
+
         activeTasks.put(player.getUniqueId(), task);
     }
-    
+
     /**
      * Stop displaying HUD for a player
      */
     public void stopHUD(Player player) {
         if (player == null) return;
-        
+
         BukkitTask task = activeTasks.remove(player.getUniqueId());
         if (task != null) {
             task.cancel();
         }
-        
+
         // Clear the action bar
         player.sendActionBar(Component.empty());
     }
-    
+
     /**
      * Update HUD display for all players within the plague radius
      */
     public void updateHUDForAllNearbyPlayers(Plague plague) {
         if (plague == null || !plague.isActive() || !plugin.getConfigManager().isHUDEnabled()) return;
-        
+
         Player plagueOwner = plague.getPlayer();
         if (plagueOwner == null || !plagueOwner.isOnline()) return;
-        
+
         int radius = plugin.getConfigManager().getCombatRadius();
-        
+
         // Update HUD for all players within radius
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getWorld().equals(plagueOwner.getWorld()) &&
                 player.getLocation().distance(plagueOwner.getLocation()) <= radius) {
-                
+
                 // Start or update HUD for this player
                 if (!activeTasks.containsKey(player.getUniqueId())) {
                     startHUD(player, plague);
@@ -93,50 +93,54 @@ public class HUDManager {
             }
         }
     }
-    
+
     /**
      * Update the HUD display for a specific player
      */
     private void updateHUDDisplay(Player player, Plague plague) {
-        Component hudComponent = buildHUDComponent(plague);
+        Component hudComponent = buildHUDComponent(player, plague);
         player.sendActionBar(hudComponent);
     }
-    
+
     /**
      * Build the HUD component with current plague information
+     * Only shows detailed info to the cursed player
      */
-    private Component buildHUDComponent(Plague plague) {
+    private Component buildHUDComponent(Player viewer, Plague plague) {
         Component result = Component.text("▌ ", NamedTextColor.BLACK); // Background separator
-        
-        // Round information
+
+        // Round information - visible to all
         Component roundInfo = Component.text("Round: ", NamedTextColor.GRAY)
             .append(Component.text(plague.getCurrentRound(), getRoundColor(plague.getCurrentRound())))
             .append(Component.text("/" + plugin.getConfigManager().getMaxRounds(), NamedTextColor.DARK_GRAY));
-        
+
         result = result.append(roundInfo);
-        
-        // Kill count (if enabled)
-        if (plugin.getConfigManager().isShowKills()) {
+
+        // Check if this is the cursed player
+        boolean isCursedPlayer = viewer.getUniqueId().equals(plague.getPlayer().getUniqueId());
+
+        // Kill count (only show to cursed player)
+        if (isCursedPlayer && plugin.getConfigManager().isShowKills()) {
             Component killInfo = Component.text(" | Kills: ", NamedTextColor.GRAY)
                 .append(Component.text(plague.getTotalKills(), NamedTextColor.WHITE));
             result = result.append(killInfo);
         }
-        
-        // Remaining mobs in current round (if enabled)
-        if (plugin.getConfigManager().isShowRemainingMobs()) {
+
+        // Remaining mobs in current round (only show to cursed player)
+        if (isCursedPlayer && plugin.getConfigManager().isShowRemainingMobs()) {
             int remainingMobs = plague.getActiveMobs().size();
             Component mobInfo = Component.text(" | Remaining: ", NamedTextColor.GRAY)
                 .append(Component.text(remainingMobs, remainingMobs > 0 ? NamedTextColor.RED : NamedTextColor.GREEN));
             result = result.append(mobInfo);
         }
-        
-        // Timer information (if enabled and round has time limit)
+
+        // Timer information - visible to all
         if (plugin.getConfigManager().isShowTimer()) {
             int timeLimit = plugin.getConfigManager().getTimeLimitPerRound();
             if (timeLimit > 0) {
                 long elapsedTime = (System.currentTimeMillis() - plague.getRoundStartTime()) / 1000;
                 long remainingTime = Math.max(0, timeLimit - elapsedTime);
-                
+
                 if (remainingTime > 0) {
                     Component timerInfo = Component.text(" | Time: ", NamedTextColor.GRAY)
                         .append(Component.text(formatTime(remainingTime), getTimerColor(remainingTime, timeLimit)));
@@ -144,21 +148,21 @@ public class HUDManager {
                 }
             }
         }
-        
-        // Antidote status (if enabled)
-        if (plugin.getConfigManager().isShowAntidoteStatus() && plague.hasAntidote()) {
+
+        // Antidote status (only show to cursed player)
+        if (isCursedPlayer && plugin.getConfigManager().isShowAntidoteStatus() && plague.hasAntidote()) {
             Component antidoteInfo = Component.text(" | ", NamedTextColor.GRAY)
                 .append(Component.text("ANTIDOTE AVAILABLE", NamedTextColor.GREEN)
                     .decoration(TextDecoration.BOLD, true));
             result = result.append(antidoteInfo);
         }
-        
+
         // Add closing separator
         result = result.append(Component.text(" ▐", NamedTextColor.BLACK));
-        
+
         return result;
     }
-    
+
     /**
      * Get color for round number based on difficulty
      */
@@ -168,7 +172,7 @@ public class HUDManager {
         if (round <= 6) return NamedTextColor.GOLD;
         return NamedTextColor.RED;
     }
-    
+
     /**
      * Get color for timer based on remaining time
      */
@@ -178,7 +182,7 @@ public class HUDManager {
         if (percentage > 0.25) return NamedTextColor.YELLOW;
         return NamedTextColor.RED;
     }
-    
+
     /**
      * Format time in MM:SS format
      */
@@ -187,7 +191,7 @@ public class HUDManager {
         long remainingSeconds = seconds % 60;
         return String.format("%02d:%02d", minutes, remainingSeconds);
     }
-    
+
     /**
      * Stop all active HUD tasks
      */
@@ -196,13 +200,13 @@ public class HUDManager {
             task.cancel();
         }
         activeTasks.clear();
-        
+
         // Clear action bars for all online players
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendActionBar(Component.empty());
         }
     }
-    
+
     /**
      * Check if player has active HUD
      */

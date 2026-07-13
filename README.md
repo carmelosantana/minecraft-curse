@@ -27,7 +27,7 @@ A dynamic survival challenge plugin for Minecraft that introduces plague-style s
 
 ## Building
 
-This plugin requires Java 21 and Maven to build.
+This plugin requires Java 25 and Maven to build.
 
 ```bash
 # Clone the repository
@@ -207,7 +207,7 @@ mvn test
 ## Technical Details
 
 - **Target**: Minecraft Java Edition 1.21+
-- **Server**: Paper 1.21.6+ (recommended)
+- **Server**: Paper 26.1.2+ (recommended)
 - **Java Version**: 21+
 - **Dependencies**: None (standalone plugin)
 

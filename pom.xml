@@ -6,7 +6,7 @@
 
     <groupId>org.xpfarm</groupId>
     <artifactId>curse</artifactId>
-    <version>0.1.2</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>The Curse</name>
@@ -14,8 +14,7 @@
     <url>https://xp.farm</url>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -32,7 +31,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.6-R0.1-SNAPSHOT</version>
+            <version>26.1.2.build.74-stable</version>
             <scope>provided</scope>
         </dependency>
 
@@ -51,7 +50,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.14.1</version>
                 <configuration>
                     <source>21</source>
                     <target>21</target>
@@ -62,7 +61,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
