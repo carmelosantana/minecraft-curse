@@ -19,6 +19,10 @@
     </properties>
 
     <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
         <!-- Paper API -->
         <repository>
             <id>papermc-repo</id>
