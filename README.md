@@ -216,3 +216,7 @@ mvn test
 - **Player Data**: Stored in Bukkit's Persistent Data Container (PDC)
 - **Server Leaderboard**: Cached in memory and persisted to `leaderboard.yml`
 - **Automatic Saving**: All data is automatically saved on server shutdown
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
