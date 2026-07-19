@@ -4,7 +4,7 @@ description: A dynamic survival challenge plugin with plague-style siege events
 api-version: '1.21'
 main: org.xpfarm.curse.CursePlugin
 author: Carmelo Santana
-website: https://xp.farm
+website: https://xpfarm.org
 
 commands:
   curse:

@@ -19,7 +19,7 @@
 
     <name>The Curse</name>
     <description>A dynamic survival challenge plugin with plague-style siege events</description>
-    <url>https://xp.farm</url>
+    <url>https://xpfarm.org</url>
 
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
