@@ -7,6 +7,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.xpfarm.curse.CursePlugin;
 import org.xpfarm.curse.utils.MessageUtil;
+import org.xpfarm.curse.utils.PlayerLookup;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -64,9 +65,10 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         // Check if targeting another player
         if (args.length > 1) {
             // Admin starting curse on another player
-            Player target = plugin.getServer().getPlayer(args[1]);
+            Player target = PlayerLookup.resolveAllowingPartial(args[1]).orElse(null);
             if (target == null) {
-                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                MessageUtil.sendMessage(sender, Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[1], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
 
@@ -127,9 +129,10 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         // Check if targeting another player
         if (args.length > 1) {
             // Admin stopping curse on another player
-            Player target = plugin.getServer().getPlayer(args[1]);
+            Player target = PlayerLookup.resolveAllowingPartial(args[1]).orElse(null);
             if (target == null) {
-                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                MessageUtil.sendMessage(sender, Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[1], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
 
@@ -175,9 +178,10 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         // Check if targeting another player
         if (args.length > 1) {
             // Admin resetting curse on another player
-            Player target = plugin.getServer().getPlayer(args[1]);
+            Player target = PlayerLookup.resolveAllowingPartial(args[1]).orElse(null);
             if (target == null) {
-                MessageUtil.sendMessage(sender, Component.text("Player not found!", NamedTextColor.RED));
+                MessageUtil.sendMessage(sender, Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[1], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
 
@@ -235,9 +239,10 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
         Player targetPlayer;
         if (args.length > 2) {
             // Admin triggering curse on another player
-            targetPlayer = plugin.getServer().getPlayer(args[2]);
+            targetPlayer = PlayerLookup.resolveAllowingPartial(args[2]).orElse(null);
             if (targetPlayer == null) {
-                MessageUtil.sendMessage(sender, Component.text("Player not found: " + args[2], NamedTextColor.RED));
+                MessageUtil.sendMessage(sender, Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[2], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
         } else {
@@ -295,17 +300,19 @@ public class CurseCommand implements CommandExecutor, TabCompleter {
                 mechanicId = args[1].toUpperCase();
                 // Look for target player in next argument
                 if (args.length > 2) {
-                    target = plugin.getServer().getPlayer(args[2]);
+                    target = PlayerLookup.resolveAllowingPartial(args[2]).orElse(null);
                     if (target == null) {
-                        MessageUtil.sendMessage(sender, Component.text("Player not found: " + args[2], NamedTextColor.RED));
+                        MessageUtil.sendMessage(sender, Component.text(
+                            PlayerLookup.noSuchPlayerMessage(args[2], PlayerLookup.onlineNames()), NamedTextColor.RED));
                         return true;
                     }
                 }
             } else {
                 // First argument is player name
-                target = plugin.getServer().getPlayer(args[1]);
+                target = PlayerLookup.resolveAllowingPartial(args[1]).orElse(null);
                 if (target == null) {
-                    MessageUtil.sendMessage(sender, Component.text("Player not found: " + args[1], NamedTextColor.RED));
+                    MessageUtil.sendMessage(sender, Component.text(
+                        PlayerLookup.noSuchPlayerMessage(args[1], PlayerLookup.onlineNames()), NamedTextColor.RED));
                     return true;
                 }
             }

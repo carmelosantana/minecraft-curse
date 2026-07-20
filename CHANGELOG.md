@@ -2,6 +2,19 @@
 
 All notable changes to The Curse are documented here.
 
+## 0.2.2 - 2026-07-20
+
+### Fixed
+
+- `/curse start|stop|reset|trigger|book <player>` now resolves Bedrock players who join
+  through Floodgate under a `.`-prefixed username. Bukkit's `getPlayer(String)` matches a
+  prefix of the *name*, so typing `carm` never reached `.acarm` — the name begins with a
+  dot. Each typed name is now also tried with the Floodgate prefix, then case-insensitively.
+- Failed player lookups now name the player who was typed and list who is actually online.
+  Three of the six call sites previously answered a bare `Player not found!` that echoed
+  nothing back; Bedrock clients receive no tab completion from Geyser, so this message is
+  the only way a prefixed username can be discovered.
+
 ## 0.2.1 - 2026-07-19
 
 ### Fixed
