@@ -129,7 +129,19 @@ headered files here. Backfilling the rest is out of scope for a bugfix and is no
 
 - [x] Unit tests cover separable logic, configuration, serialization, permissions, and failure paths where applicable. 6 tests added for `PlayerLookup`'s two pure functions, written failing-first (initial run: 7 `cannot find symbol: PlayerLookup` compile errors). Coverage boundary stated under Known limitations.
 - [x] `mvn --batch-mode --no-transfer-progress clean verify` succeeds. `Tests run: 8, Failures: 0, Errors: 0, Skipped: 0` / `BUILD SUCCESS` — 6 new plus the 2 pre-existing `CursePluginTest` cases, which stayed green.
-- [ ] The releasable JAR and embedded `plugin.yml` were inspected; `original-*` JARs are excluded. **NOT INSPECTED.** `target/curse-0.2.2.jar` was produced but its contents were not opened. Note that `maven-shade-plugin` is configured while every dependency is `provided`/`test` scope, so it shades nothing and can emit an `original-*` JAR — worth reviewing separately.
+- [x] The releasable JAR and embedded `plugin.yml` were inspected; `original-*` JARs are excluded. Verified by unzipping the built JAR. Embedded `plugin.yml` reads `version: '0.2.2'`, `api-version: '1.21'`, `main: org.xpfarm.curse.CursePlugin`. Bytecode major version of the first `.class` entry is **69 (Java 25)**, matching the ecosystem standard.
+
+      **Exclusion is at the CI release-asset step, not at build time.** `target/` contains both
+      `curse-0.2.2.jar` and `original-curse-0.2.2.jar` — the `original-*` JAR *is* still produced
+      locally. It is excluded from released assets by `.github/workflows/build.yml`, which filters
+      `! -name 'original-*'` on both the SHA256SUMS step and the `gh release upload` step (and
+      excludes `!target/original-*.jar` from the uploaded build artifact). So no `original-*` JAR
+      can reach a release, but one does exist on disk after a local build.
+
+      `maven-shade-plugin` is a **no-op** here: every dependency is `provided`/`test` scope, so it
+      shades nothing and exists only to rename the untouched jar, which is what creates the
+      `original-*` file. `agua-de-florida` resolved this by removing shading entirely; doing the
+      same here is out of scope for this change.
 
 ## 7. Matrix
 
