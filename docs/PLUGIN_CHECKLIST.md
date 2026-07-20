@@ -202,17 +202,17 @@ adds no dependency.
 ## 8. CI/CD
 
 - [x] Identical standard plugin Actions workflow is installed with the required triggers, Temurin 25 build, artifact, checksum, and release behavior. `.github/workflows/build.yml` present since `0.2.0`.
-- [ ] Successful main Actions run is recorded before tagging. **NOT APPLICABLE YET** — `0.2.2` is committed on `fix/floodgate-name-resolution` and has not been pushed, merged, or tagged.
+- [x] Successful main Actions run is recorded before tagging. `fix/floodgate-name-resolution` was merged fast-forward to `main` and pushed on 2026-07-20. The `main`-branch Actions run for commit `88fdf7c` completed with conclusion `success` **before** tag `v0.2.2` was created. No tag was pushed against a red or in-flight run.
 - [ ] Workflow permissions contain no broader access than the documented contract. **NOT AUDITED** during this bugfix.
 
-## 9. Release — `v0.2.2` NOT STARTED
+## 9. Release — `v0.2.2` COMPLETE
 
-- [ ] Semantic version matches the POM, plugin metadata, and `v<version>` tag. `pom.xml` is at `0.2.2` and `plugin.yml` inherits it via `${project.version}`; **no tag created** — tagging was explicitly out of scope.
-- [ ] Successful tag Actions run and GitHub release are recorded.
-- [ ] Release contains exactly one updater-matching JAR plus `SHA256SUMS.txt` and no `original-*` JAR.
-- [ ] Downloaded release assets pass `sha256sum --check SHA256SUMS.txt`.
+- [x] Semantic version matches the POM, plugin metadata, and `v<version>` tag. Verified: `pom.xml` `<version>` `0.2.2` equals tag `v0.2.2` equals the `plugin.yml` version read out of the built JAR.
+- [x] Successful tag Actions run and GitHub release are recorded. Annotated tag `v0.2.2` created on verified commit `88fdf7c` and pushed; the tag Actions run completed with conclusion `success`. GitHub release published 2026-07-20 14:48:00 UTC with `draft=false`, `prerelease=false`, and it is now the repository's Latest release.
+- [x] Release contains exactly one updater-matching JAR plus `SHA256SUMS.txt` and no `original-*` JAR. Verified by downloading the published release assets: exactly one JAR matching the updater asset pattern, plus `SHA256SUMS.txt`, and no `original-*` JAR.
+- [x] Downloaded release assets pass `sha256sum --check SHA256SUMS.txt`. Reported `OK` for the JAR.
 
-Last completed release is `v0.2.1`.
+Previous release was `v0.2.1`.
 
 ## 10. Updater
 
@@ -221,11 +221,15 @@ Last completed release is `v0.2.1`.
 - [ ] Updater dry-run uses a disposable directory and never a production plugin directory. **NOT RUN.**
 - [ ] Failure retains the installed JAR and default fail-open behavior permits Minecraft startup. **NOT RUN.**
 
+Updater enrollment work was **not performed in this pass** (`v0.2.2` release only).
+
 ## 11. Deployment
 
 - [ ] Dokploy redeployment notes identify the full recreation used to rerun the one-shot updater. Not deployed.
 - [ ] Updater completion, Minecraft startup, destination JAR, and stack/plugin logs were inspected. Not deployed.
 - [ ] No production plugin hot reload was used. Not deployed.
+
+**Not performed.** The operator will deploy and verify live on `play.xpfarm.org` via the dev server with helpers.
 
 **Rollback:** `0.2.2` is additive at the call sites — the new resolver's last tier is the same
 `Bukkit.getPlayer(String)` the old code called, so the worst case for a Java player is the previous
